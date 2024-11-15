@@ -48,6 +48,7 @@ return(duplicate)
 
 birth_sim(50)
 ```
+
 ```{r}
 sim_res = 
   expand_grid(
@@ -65,6 +66,88 @@ sim_res |>
 ```
 
 
-
 # Problem 2
 
+
+# Problem 3 
+
+
+The raw homicide dataset contains 52,179 observations and 12 columns/variables that gives us information on homicides in 50 large U.S cities . The variables are `uid`, `reported_data`, `victim_last`, `victim_race`, `victim_age`, `victim_sex`, `city`, `state`, `lat`, `lon`, and '`disposition`. Below, I have added a new variable that combined city and state.  
+```{r}
+
+homicide = read_csv("homicide-data.csv") 
+
+
+new_homicide = homicide|> 
+  mutate(city_state = paste(city, state, sep = ",")) |> 
+  group_by(city_state) |> 
+  summarize(
+    total_homicides = n(),
+    unsolved_homicides = sum(disposition %in% c("Closed without arrest", "Open/No arrest")), 
+    .groups = "drop"
+  )
+
+```
+
+Next, I obtained the proportion on homicides that were unsolved and pulled the estimate and confidence interval. 
+```{r Estimate and CI for Baltimore}
+
+baltimore_data = homicide |> 
+  mutate(city_state = paste(city, state, sep = ",")) |>
+  filter(city_state == "Baltimore,MD") |> 
+  summarize(
+    total_homicides_balt = n(),
+    unsolved_homicides_balt = sum(disposition %in% c("Closed without arrest", "Open/No arrest"), na.rm = TRUE))
+
+baltimore_prop = 
+  prop.test(baltimore_data$unsolved_homicides_balt, baltimore_data$total_homicides_balt) |> 
+  broom::tidy()
+
+print(baltimore_prop)
+
+```
+
+Below, I pulled he estimate and confidence interval for every city in our homicide dataset. 
+```{r CI for Every City}
+new_homicide = homicide|> 
+  mutate(city_state = paste(city, state, sep = ",")) |> 
+  group_by(city_state) |> 
+  summarize(
+    total_homicides = n(),
+    unsolved_homicides = sum(disposition %in% c("Closed without arrest", "Open/No arrest")), 
+    .groups = "drop"
+  )
+
+
+prop_every_city = new_homicide |> 
+  mutate(
+    prop_result = pmap(
+      list(unsolved_homicides, total_homicides), 
+      ~ prop.test(..1, ..2))) |> 
+   mutate(
+    prop_tidy = map(prop_result, broom::tidy)) |> 
+  unnest(prop_tidy) |> 
+  select(city_state, estimate, p.value, conf.low, conf.high)
+
+print(prop_every_city)
+
+```
+
+Finally, I created a plot that graphs the estimate for each city with error bars. 
+```{r Creating Plot}
+
+prop_plot = prop_every_city |>
+  mutate (city_state = fct_reorder(city_state, estimate)) |> 
+  ggplot(aes(x = city_state, y = estimate, ymin = conf.low, ymax = conf.high)) +
+  geom_point(color = "black", size = 2) + 
+  geom_errorbar(width = 0.1, color = "red") +  
+  labs(
+    x = "City/State",
+    y = "Proportion of Unsolved Homicides (Estimate)",
+    title = "Proportion of Unsolved Homicides by City"
+  ) +
+  coord_flip() +  
+  theme_minimal()
+
+print(prop_plot)
+```
