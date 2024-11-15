@@ -1,0 +1,70 @@
+---
+title: "p8105_hw5_ej2520"
+author: "Erynne Jackson"
+date: "2024-11-15"
+output: html_document
+---
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE}
+library(tidyverse)
+
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE, 
+  fig.width = 6, 
+  fig.asp = .6, 
+  out.width = "90%"
+) 
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options( 
+  ggplot2.continuous.colour = "viridus", 
+  ggplot2continous.fill = "viridus"
+  )
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+                      
+library(rvest)
+
+set.seed(1)
+
+```
+
+# Problem 1
+
+```{r}
+
+birth_sim = function(n){
+birthday = sample(1:365, size = n, replace = TRUE)
+
+duplicate = length(unique(birthday)) < n
+
+return(duplicate)
+
+}
+
+birth_sim(50)
+```
+```{r}
+sim_res = 
+  expand_grid(
+    n = 2:50, 
+    iter = 1:1000
+  ) |> 
+  mutate(res = map_lgl(n, birth_sim)) |>
+group_by(n) |> 
+summarize(prob = mean(res))
+
+
+sim_res |> 
+  ggplot(aes(x = n, y=prob)) + 
+  geom_line()
+```
+
+
+
+# Problem 2
+
