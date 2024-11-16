@@ -68,6 +68,103 @@ sim_res |>
 
 # Problem 2
 
+```{r}
+
+Power_data = tibble(
+  x = rnorm(30,0,5)
+) 
+
+Power_data |> 
+  summarize( 
+    mean_x= mean(x), 
+    sd_x= sd(x)
+  )
+
+
+power = function(n) {
+  sim_data = rnorm(n, 0, 5)
+  return(tibble(mean_x = mean(sim_data), sd_x = sd(sim_data)))
+}
+
+
+output = vector("list", 5000)
+for (i in 1:5000) { 
+  output[[i]] = power(30)
+}
+
+sim_res = bind_rows(output)
+```
+
+
+```{r}
+
+n = 30              
+sigma = 5           
+alpha = 0.05        
+num_sim = 5000
+mu_values = c(0,1,2,3,4,5,6)
+
+output = vector("list",.100) 
+
+for(mu in mu_values) {
+  estimates = numeric(num_sim)
+  p_values = numeric(num_sim)
+  
+
+  for(i in 1:5000) {
+    x <- rnorm(n, mean = mu, sd = sigma)
+    
+    test_res = t.test(x, mu = 0)
+    estimates[i] = test_res$estimate
+    p_values[i] = test_res$p.value
+  }
+  
+
+  power = mean(p_values < alpha)
+  avg_est = mean(estimates)
+  avg_est_rejected = mean(estimates[p_values < alpha])
+
+
+output[[as.character(mu)]] = list(
+    power = power,
+    avg_est= avg_est,
+    avg_est_rejected = avg_est_rejected
+  )
+}
+
+final_test = data.frame(
+  mu = rep(mu_values, each = 1),
+  power = sapply(output, function(x) x$power),
+  avg_est= sapply(output, function(x) x$avg_est),
+  avg_est_rejected = sapply(output, function(x) x$avg_est_rejected)
+)
+
+
+power.true = ggplot(final_test, aes(x = mu, y = power)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Power of the Test",
+       x = "True Value of μ",
+       y = "Proportion Rejected (Power)")
+
+
+average.true = ggplot(final_test, aes(x = mu, y = avg_est)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Average Estimate of μ",
+       x = "True Value of μ",
+       y = "Average Estimate of μ") +
+  geom_line(aes(x = mu, y = avg_est_rejected), color = "pink") +
+  geom_point(aes(x = mu, y = avg_est_rejected), color = "pink") 
+
+# Print the results
+print(average.true)
+print(power.true)
+
+
+
+```
+The sample average of the estimated mu across tests for which the null is rejected is not approximately equal to the true value of mu until the true mu and estimated mu are equal to 4. This may be because the sample mean depends on the sample size. The larger the sample size, the closer we get to the true mean. 
 
 # Problem 3 
 
