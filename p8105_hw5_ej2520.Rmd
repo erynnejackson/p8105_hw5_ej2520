@@ -164,7 +164,8 @@ print(power.true)
 
 
 ```
-The sample average of the estimated mu across tests for which the null is rejected is not approximately equal to the true value of mu until the true mu and estimated mu are equal to 4. This may be because the sample mean depends on the sample size. The larger the sample size, the closer we get to the true mean. 
+
+As the sample size increases, power also increases. The sample average of the estimated mu across tests for which the null is rejected is not approximately equal to the true value of mu until the true mu and estimated mu are equal to 4. This may be because the sample mean depends on the sample size. The larger the sample size, the closer we get to the true mean. 
 
 # Problem 3 
 
